@@ -1,0 +1,32 @@
+{
+  "name": "js_1st_unit_3rd_task",
+  "version": "1.0.0",
+  "description": "",
+  "main": "task.js",
+  "dependencies": {
+    "xlsx": "0.14.1",
+    "readline-sync": "1.4.9",
+    "optimist": "0.6.1"
+  },
+  "devDependencies": {
+    "eslint": "^5.9.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Duchannes/js_1st_unit_3rd_task.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Duchannes/js_1st_unit_3rd_task/issues"
+  },
+  "homepage": "https://github.com/Duchannes/js_1st_unit_3rd_task#readme"
+}
