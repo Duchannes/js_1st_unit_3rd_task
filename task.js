@@ -63,7 +63,6 @@ function jsonToXlsx (object) {
 }
 
 function renameFolder (currFolder, newFolder) {
-  console.log(fs.existsSync(currFolder) + '!' + fs.statSync(currFolder).isDirectory())
   if (fs.existsSync(currFolder) && fs.statSync(currFolder).isDirectory()) {
     if (fs.existsSync(newFolder) && fs.statSync(newFolder).isDirectory()) {
       var path = require('path')
@@ -72,9 +71,9 @@ function renameFolder (currFolder, newFolder) {
       fs.renameSync(currFolder, newFolder + '\\' + folderName)
       console.log(folderPath + ' succesfully moved to ' + fs.realpathSync(newFolder + '\\' + folderName))
     } else {
-      throw new Error(newFolder + ' is not exist OR is not a directory')
+      throw new Error(newFolder + ' is not a directory')
     }
   } else {
-    throw new Error(currFolder + ' is not exist OR is not a directory')
+    throw new Error(currFolder + ' is not a directory')
   }
 }
