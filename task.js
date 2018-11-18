@@ -1,79 +1,77 @@
-let fs = require('fs')
-let readline = require('readline-sync')
-let xlsx = require('xlsx')
-let path
-let argv = require('optimist').argv
+const fs = require('fs');
+const readline = require('readline-sync');
+const xlsx = require('xlsx');
 
-if (Object.keys(argv).length > 2) {
-  if (argv.inputDir === undefined || argv.outputDir === undefined) {
-    console.log("Use \n--inputDir 'path'\n--outputDir 'path'")
-  } else {
-    renameFolder(argv.inputDir, argv.outputDir)
+const argv = require('optimist').argv;
+
+let inputDir;
+let outputDir;
+
+function checkArgs (argv) {
+  if (argv.help) {
+    console.log('Use:\ntask --inputDir \'path to dir\' --outputDir \'new path to dir\'');
+    process.exit(1);
   }
-} else {
-  body()
-}
-
-function body () {
-  do {
-    path = readline.question('Input file name | file absolute path:\n')
-  } while (!checkFolder(path))
-
-  console.log('--------\nJson files:')
-  jsonToXlsx(path)
-}
-
-function checkFolder (pathToFolder) {
-  if (!fs.existsSync(pathToFolder)) {
-    console.clear()
-    console.log(pathToFolder + ' doesn\'t exists')
-    return false
-  } else if (!fs.statSync(pathToFolder).isDirectory()) {
-    console.clear()
-    console.log(pathToFolder + ' isn\'t a folder')
-    return false
+  if (argv.inputDir !== undefined) {
+    inputDir = argv.inputDir;
   } else {
-    console.log('Ok')
-    return true
+    inputDir = readline.question('Input file name | file absolute path:\n');
+  }
+  if (argv.outputDir !== undefined) {
+    outputDir = argv.outputDir;
+  } else {
+    outputDir = inputDir;
   }
 }
 
-function jsonToXlsx (object) {
-  let files = fs.readdirSync(object)
-  for (let i = 0; i < files.length; i++) {
-    if (fs.statSync(object + '\\' + files[i]).isFile() && files[i].endsWith('.json')) {
-      let path = fs.realpathSync(object + '\\' + files[i])
-      let jsonFile = require(path)
-      let ws = xlsx.utils.json_to_sheet([jsonFile])
-      let wb = xlsx.utils.book_new()
-      xlsx.utils.book_append_sheet(wb, ws, files[i])
-      console.log(path)
-      try {
-        xlsx.writeFile(wb, path.replace('.json', '.xlsx'))
-        console.log('  - ' + path.replace('.json', '.xlsx') + ' was succesfully created.')
-      } catch (error) {
-        console.log(error.message)
-      }
+function checkFolder (path) {
+  if (!fs.existsSync(path)) {
+    throw new Error(path + ' doesn\'t exists');
+  } else if (!fs.statSync(path).isDirectory()) {
+    throw new Error(path + ' isn\'t a folder');
+  }
+}
+
+function jsonToXlsx (file, outputDir) {
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir);
+  }
+  const files = fs.readdirSync(file);
+  files.forEach((fileName, index, array) => {
+    if (fs.statSync(file + '\\' + fileName).isFile() && fileName.endsWith('.json')) {
+      createJsonFile(file, fileName, outputDir);
     } else {
-      if (fs.statSync(object + '\\' + files[i]).isDirectory()) {
-        jsonToXlsx(object + '\\' + files[i])
+      if (fs.statSync(file + '\\' + fileName).isDirectory()) {
+        jsonToXlsx(file + '\\' + fileName, outputDir + '\\' + fileName);
       }
     }
-  }
+  });
 }
 
-function renameFolder (currFolder, newFolder) {
-  if (fs.existsSync(currFolder) && fs.statSync(currFolder).isDirectory()) {
-    if (fs.existsSync(newFolder) && fs.statSync(newFolder).isDirectory()) {
-      var path = require('path')
-      var folderPath = fs.realpathSync(currFolder)
-      var folderName = path.basename(folderPath)
-      fs.renameSync(currFolder, newFolder + '\\' + folderName)
-      console.log(folderPath + ' succesfully moved to ' + fs.realpathSync(newFolder + '\\' + folderName))
-    } else {
-      throw new Error(newFolder + ' is not a directory')
-    }
-  } else {
-    throw new Error(currFolder + ' is not a directory')
-  }
+function createJsonFile (file, fileName, outputDir) {
+  const fullPath = fs.realpathSync(file + '\\' + fileName);
+  const newPath = fs.realpathSync(outputDir) + '\\' + fileName.replace('.json', '') + '.xlsx';
+  const jsonFile = openJsonFile(fullPath);
+  const ws = xlsx.utils.json_to_sheet([jsonFile]);
+  const wb = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(wb, ws, fileName.replace('.json', ''));
+  console.log('Json file - \n\t' + fullPath + '\nwas found.\n----------');
+  xlsx.writeFile(wb, newPath);
+  console.log('XLSX file - \n\t' + newPath + '\nwas succesfully created.\n------------------------');
 }
+
+function openJsonFile (filePath) {
+  const jsonObject = require(filePath);
+  const properties = Object.getOwnPropertyNames(jsonObject);
+  properties.forEach(property => {
+    if (typeof jsonObject[property] === 'object') {
+      jsonObject[property] = JSON.stringify(jsonObject[property]);
+    }
+  });
+  return jsonObject;
+}
+
+checkArgs(argv);
+checkFolder(inputDir);
+checkFolder(outputDir);
+jsonToXlsx(inputDir, outputDir);
